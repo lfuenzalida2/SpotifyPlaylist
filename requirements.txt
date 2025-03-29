@@ -1,0 +1,6 @@
+pytube
+pydub
+ttkbootstrap
+spotipy
+mutagen
+dotenv
