@@ -152,6 +152,7 @@ def abrir_carpeta():
 root = ttk.Window(themename="darkly")
 root.title("Spotify Playlist Downloader")
 root.geometry("500x400")
+root.iconbitmap("icon.ico")
 
 label = tk.Label(root, text="Ingresa la URL de la playlist de Spotify:")
 label.pack(pady=5)
