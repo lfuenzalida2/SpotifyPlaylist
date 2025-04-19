@@ -9,6 +9,7 @@ The dependencies and versions used are on the file <code>requirements.txt</code>
 1) Clone the repository
 2) Create a proyect on [Spotify Developers](https://developer.spotify.com/)
 3) Add the .env with the credentials
+4) Run <code>py -m venv env</code> to create a virtual enviroments
 4) Run <code>pip install -r requirements.txt</code> to install the dependencies
 5) Run <code>python main.py</code>
 6) Insert the Spotify Playlist URL start the download
