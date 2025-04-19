@@ -1,4 +1,5 @@
 import os
+import sys
 import yt_dlp
 import spotipy
 import urllib.parse
@@ -14,6 +15,14 @@ import ttkbootstrap as ttk
 from dotenv import load_dotenv
 
 load_dotenv()
+
+def recurso_path(rel_path):
+    if hasattr(sys, '_MEIPASS'):
+        base_path = sys._MEIPASS  # cuando se ejecuta como .exe
+    else:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, rel_path)
 
 sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials(
     client_id=os.getenv("SPOTIFY_CLIENT_ID"),
@@ -34,6 +43,8 @@ def obtener_canciones_playlist(playlist_url):
     try:
         playlist_id = playlist_url.split("/")[-1].split("?")[0]
         results = sp.playlist_tracks(playlist_id)
+
+        playlist_name = sp.playlist(playlist_id)["name"]
         canciones = []
 
         for item in results["items"]:
@@ -45,7 +56,7 @@ def obtener_canciones_playlist(playlist_url):
                 "caratula": track["album"]["images"][0]["url"] if track["album"]["images"] else None
             })
         
-        return canciones
+        return canciones, playlist_name
 
     except spotipy.exceptions.SpotifyException:
         log_message(f"❌ URL de Spotify invalida")
@@ -62,10 +73,13 @@ def buscar_en_youtube(query):
 
 # Descargar audio desde YouTube
 def descargar_audio(url, nombre_archivo):
-    ffmpeg_path = os.path.join(os.getcwd(), 'ffmpeg', 'bin')
+    ffmpeg_path = recurso_path('ffmpeg\\bin')
+    print(ffmpeg_path)
+
     opciones = {
         'format': 'bestaudio/best',
-        'outtmpl': os.path.join(carpeta_destino, nombre_archivo),
+        # 'outtmpl': os.path.join(carpeta_destino, nombre_archivo),
+        'outtmpl': recurso_path(f'{carpeta_destino}\\{nombre_archivo}'),
         'ffmpeg_location': ffmpeg_path,
         'postprocessors': [{
             'key': 'FFmpegExtractAudio',
@@ -82,7 +96,8 @@ def descargar_caratula(url, nombre_archivo):
     if url:
         response = requests.get(url)
         if response.status_code == 200:
-            ruta_caratula = os.path.join(carpeta_destino, f"{nombre_archivo}.jpg")
+            # ruta_caratula = os.path.join(carpeta_destino, f"{nombre_archivo}.jpg")
+            ruta_caratula = recurso_path(f"{carpeta_destino}\\{nombre_archivo}.jpg")
             with open(ruta_caratula, "wb") as file:
                 file.write(response.content)
             return ruta_caratula
@@ -108,17 +123,23 @@ def agregar_metadatos(mp3_path, titulo, artista, album, caratula_path):
 # Descargar playlist
 def descargar_playlist():
     playlist_url = entry_url.get()
+
     if not playlist_url:
         log_message("⚠️ Ingresa una URL de playlist de Spotify")
         return
     
     log_message("🔎 Obteniendo canciones...")
-    canciones = obtener_canciones_playlist(playlist_url)
+    canciones, playlist_name = obtener_canciones_playlist(playlist_url)
     log_message(f"✅ {len(canciones)} canciones encontradas.")
+    
+    global carpeta_destino
+    carpeta_destino = os.path.join(os.getcwd(), f"songs\\{playlist_name}")
+    os.makedirs(carpeta_destino, exist_ok=True)
     
     for cancion in canciones:
         nombre_archivo = f"{cancion['titulo']} - {cancion['artista']}"
-        ruta_mp3 = os.path.join(carpeta_destino, nombre_archivo)
+        #  ruta_mp3 = os.path.join(carpeta_destino, nombre_archivo)
+        ruta_mp3 = recurso_path(f"{carpeta_destino}\\{nombre_archivo}")
         
         if os.path.exists(ruta_mp3 + ".mp3"):
             log_message(f"✅ {nombre_archivo} ya existe. Saltando...")
@@ -152,7 +173,7 @@ def abrir_carpeta():
 root = ttk.Window(themename="darkly")
 root.title("Spotify Playlist Downloader")
 root.geometry("500x400")
-root.iconbitmap("icon.ico")
+root.iconbitmap(recurso_path("assets\\icon.ico"))
 
 label = tk.Label(root, text="Ingresa la URL de la playlist de Spotify:")
 label.pack(pady=5)
