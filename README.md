@@ -24,3 +24,4 @@ SPOTIFY_CLIENT_SECRET=Spotify proyect credentials
 
 ### Terms and conditions
 The author is not legally binded or responsable of the usage given to the tool
+Dedicated to AVB
